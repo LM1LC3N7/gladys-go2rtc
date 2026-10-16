@@ -1,177 +1,368 @@
 {
   "manifest_version": 1,
   "type": "device",
-  "name": "Demo Devices Template",
+  "name": "go2rtc",
   "description": {
-    "en": "Starter template showing sensors, a switch, a dimmable light and a smart plug.",
-    "fr": "Template de démarrage : capteurs, interrupteur, lampe variable et prise connectée."
+    "en": "go2rtc streams as Gladys cameras: RTSP, HomeKit, Tapo, USB… go2rtc bundled or your own.",
+    "fr": "Les flux go2rtc en caméras Gladys : RTSP, HomeKit, Tapo, USB… go2rtc intégré ou le vôtre."
   },
-  "version": "1.0.0",
-  "docker_image": "ghcr.io/gladysassistant/integration-template-js:1.0.0",
+  "version": "0.1.0",
+  "docker_image": "ghcr.io/lm1lc3n7/gladys-go2rtc:0.1.0",
   "gladys_version": ">=5.1.0",
-  "cover_image": "https://raw.githubusercontent.com/GladysAssistant/integration-template-js/master/cover.png",
-  "categories": ["lighting", "security", "environment"],
-  "transports": ["local", "cloud"],
+  "cover_image": "https://raw.githubusercontent.com/LM1LC3N7/gladys-go2rtc/main/cover.png",
+  "categories": ["security", "multimedia"],
+  "transports": ["local"],
   "config_schema": [
     {
       "key": "intro",
       "type": "section",
-      "label": { "en": "Getting started", "fr": "Pour commencer" },
+      "label": { "en": "How it works", "fr": "Fonctionnement" },
       "description": {
-        "en": "The demo weather station reads real data from the free Open-Meteo API: pick the coordinates to observe. No account, no API key.",
-        "fr": "La station météo de démonstration lit de vraies données via l'API gratuite Open-Meteo : choisissez les coordonnées à observer. Pas de compte, pas de clé d'API."
+        "en": "go2rtc (open source, by AlexxIT) turns almost any camera into a stream: RTSP and ONVIF cameras, HomeKit cameras (Aqara G100…), Tapo, Xiaomi, DVR-IP recorders, USB webcams, HTTP snapshots. Each go2rtc stream becomes a Gladys camera (Discovery tab), with an image refreshed at the pace chosen below and an online / offline badge. Use the go2rtc that Gladys runs (nothing to install), or your own (Frigate's too). Unofficial integration, not affiliated with the go2rtc project.",
+        "fr": "go2rtc (libre, par AlexxIT) transforme presque n'importe quelle caméra en flux : caméras RTSP et ONVIF, caméras HomeKit (Aqara G100…), Tapo, Xiaomi, enregistreurs DVR-IP, webcams USB, images HTTP. Chaque flux go2rtc devient une caméra Gladys (onglet Découverte), avec une image rafraîchie au rythme choisi plus bas et un badge en ligne / hors ligne. Utilisez le go2rtc que Gladys lance (rien à installer), ou le vôtre (celui de Frigate aussi). Intégration non officielle, sans lien avec le projet go2rtc."
       },
       "links": [
         {
-          "url": "https://open-meteo.com/en/docs",
-          "label": { "en": "Open-Meteo documentation", "fr": "Documentation Open-Meteo" }
+          "url": "https://github.com/AlexxIT/go2rtc",
+          "label": { "en": "go2rtc project", "fr": "Projet go2rtc" }
+        },
+        {
+          "url": "https://github.com/AlexxIT/go2rtc#module-streams",
+          "label": { "en": "go2rtc sources", "fr": "Sources go2rtc" }
         }
       ]
     },
     {
-      "key": "latitude",
-      "type": "number",
-      "label": { "en": "Latitude", "fr": "Latitude" },
-      "description": {
-        "en": "Latitude used for the demo weather sensor.",
-        "fr": "Latitude utilisée par le capteur météo de démonstration."
-      },
-      "placeholder": { "en": "e.g. 48.8566", "fr": "ex. 48.8566" },
-      "required": true,
-      "default": 48.8566,
-      "min": -90,
-      "max": 90
-    },
-    {
-      "key": "longitude",
-      "type": "number",
-      "label": { "en": "Longitude", "fr": "Longitude" },
-      "description": {
-        "en": "Longitude used for the demo weather sensor.",
-        "fr": "Longitude utilisée par le capteur météo de démonstration."
-      },
-      "placeholder": { "en": "e.g. 2.3522", "fr": "ex. 2.3522" },
-      "required": true,
-      "default": 2.3522,
-      "min": -180,
-      "max": 180
-    },
-    {
-      "key": "unit",
+      "key": "mode",
       "type": "select",
-      "label": { "en": "Temperature unit", "fr": "Unité de température" },
-      "required": false,
-      "default": "celsius",
+      "label": { "en": "go2rtc server", "fr": "Serveur go2rtc" },
+      "required": true,
+      "default": "bundled",
       "options": [
-        { "value": "celsius", "label": { "en": "Celsius", "fr": "Celsius" } },
-        { "value": "fahrenheit", "label": { "en": "Fahrenheit", "fr": "Fahrenheit" } }
+        {
+          "value": "bundled",
+          "label": { "en": "The go2rtc run by Gladys", "fr": "Le go2rtc lancé par Gladys" }
+        },
+        {
+          "value": "external",
+          "label": {
+            "en": "My own go2rtc server (or Frigate's)",
+            "fr": "Mon propre serveur go2rtc (ou celui de Frigate)"
+          }
+        }
       ]
     },
     {
-      "key": "poll_frequency",
-      "type": "number",
-      "label": { "en": "Refresh interval (s)", "fr": "Intervalle de rafraîchissement (s)" },
+      "key": "bundled_section",
+      "type": "section",
+      "label": { "en": "go2rtc run by Gladys", "fr": "go2rtc lancé par Gladys" },
       "description": {
-        "en": "How often sensors are polled, in seconds (one minute minimum).",
-        "fr": "Fréquence d'interrogation des capteurs, en secondes (une minute minimum)."
+        "en": "Gladys runs the official go2rtc image next to this integration. Its web page (live video, adding streams, HomeKit pairing): http://{{gladys_host}}:{{port:go2rtc_web}}/ with the user admin and the web password below. RTSP restream for other software: rtsp://admin:<web password>@{{gladys_host}}:{{port:go2rtc_rtsp}}/<stream name>. USB webcam: grant the video hardware to the go2rtc container in Gladys, then use the source ffmpeg:device?video=0#video=h264.",
+        "fr": "Gladys lance l'image officielle de go2rtc à côté de cette intégration. Sa page web (vidéo en direct, ajout de flux, appairage HomeKit) : http://{{gladys_host}}:{{port:go2rtc_web}}/ avec l'utilisateur admin et le mot de passe web ci-dessous. Rediffusion RTSP pour d'autres logiciels : rtsp://admin:<mot de passe web>@{{gladys_host}}:{{port:go2rtc_rtsp}}/<nom du flux>. Webcam USB : autorisez le matériel vidéo pour le conteneur go2rtc dans Gladys, puis utilisez la source ffmpeg:device?video=0#video=h264."
+      }
+    },
+    {
+      "key": "web_password",
+      "type": "secret",
+      "label": { "en": "Web password", "fr": "Mot de passe web" },
+      "description": {
+        "en": "Password of the go2rtc web page and of the RTSP restream (user admin). Empty: Gladys picks a random one and the web page stays closed.",
+        "fr": "Mot de passe de la page web de go2rtc et de la rediffusion RTSP (utilisateur admin). Vide : Gladys en choisit un au hasard et la page web reste fermée."
       },
-      "required": false,
-      "default": 300,
-      "min": 60,
-      "max": 3600
+      "required": false
+    },
+    {
+      "key": "stream_1_name",
+      "type": "string",
+      "label": { "en": "Stream 1: name", "fr": "Flux 1 : nom" },
+      "description": {
+        "en": "Name of the stream in go2rtc and of the camera in Gladys (empty: camera_1). Renaming it later makes a new camera.",
+        "fr": "Nom du flux dans go2rtc et de la caméra dans Gladys (vide : camera_1). Le renommer plus tard crée une nouvelle caméra."
+      },
+      "placeholder": { "en": "e.g. garden", "fr": "ex. jardin" },
+      "required": false
+    },
+    {
+      "key": "stream_1_source",
+      "type": "string",
+      "label": { "en": "Stream 1: source", "fr": "Flux 1 : source" },
+      "description": {
+        "en": "Any go2rtc source: rtsp://user:password@192.168.1.20:554/stream1, onvif://…, homekit://…, tapo://…, ffmpeg:device?video=0#video=h264 (USB webcam)… Leave it empty to remove the stream.",
+        "fr": "Toute source go2rtc : rtsp://utilisateur:motdepasse@192.168.1.20:554/stream1, onvif://…, homekit://…, tapo://…, ffmpeg:device?video=0#video=h264 (webcam USB)… Videz-la pour retirer le flux."
+      },
+      "placeholder": {
+        "en": "e.g. rtsp://user:password@192.168.1.20:554/stream1",
+        "fr": "ex. rtsp://utilisateur:motdepasse@192.168.1.20:554/stream1"
+      },
+      "required": false
+    },
+    {
+      "key": "stream_2_name",
+      "type": "string",
+      "label": { "en": "Stream 2: name", "fr": "Flux 2 : nom" },
+      "required": false
+    },
+    {
+      "key": "stream_2_source",
+      "type": "string",
+      "label": { "en": "Stream 2: source", "fr": "Flux 2 : source" },
+      "required": false
+    },
+    {
+      "key": "stream_3_name",
+      "type": "string",
+      "label": { "en": "Stream 3: name", "fr": "Flux 3 : nom" },
+      "required": false
+    },
+    {
+      "key": "stream_3_source",
+      "type": "string",
+      "label": { "en": "Stream 3: source", "fr": "Flux 3 : source" },
+      "required": false
+    },
+    {
+      "key": "stream_4_name",
+      "type": "string",
+      "label": { "en": "Stream 4: name", "fr": "Flux 4 : nom" },
+      "required": false
+    },
+    {
+      "key": "stream_4_source",
+      "type": "string",
+      "label": { "en": "Stream 4: source", "fr": "Flux 4 : source" },
+      "required": false
+    },
+    {
+      "key": "stream_5_name",
+      "type": "string",
+      "label": { "en": "Stream 5: name", "fr": "Flux 5 : nom" },
+      "required": false
+    },
+    {
+      "key": "stream_5_source",
+      "type": "string",
+      "label": { "en": "Stream 5: source", "fr": "Flux 5 : source" },
+      "required": false
+    },
+    {
+      "key": "stream_6_name",
+      "type": "string",
+      "label": { "en": "Stream 6: name", "fr": "Flux 6 : nom" },
+      "required": false
+    },
+    {
+      "key": "stream_6_source",
+      "type": "string",
+      "label": { "en": "Stream 6: source", "fr": "Flux 6 : source" },
+      "description": {
+        "en": "More streams: add them in the go2rtc web page, they show up in Discovery too.",
+        "fr": "Plus de flux : ajoutez-les dans la page web de go2rtc, ils apparaissent aussi dans Découverte."
+      },
+      "required": false
+    },
+    {
+      "key": "webrtc_address",
+      "type": "string",
+      "label": {
+        "en": "Address of this Gladys machine (WebRTC)",
+        "fr": "Adresse de cette machine Gladys (WebRTC)"
+      },
+      "description": {
+        "en": "Optional: the IP address of this Gladys machine on your network, for WebRTC in the go2rtc web page. Without it, the page plays the video over MSE, which works in recent browsers.",
+        "fr": "Facultatif : l'adresse IP de cette machine Gladys sur votre réseau, pour le WebRTC de la page web de go2rtc. Sans elle, la page lit la vidéo en MSE, qui fonctionne dans les navigateurs récents."
+      },
+      "placeholder": { "en": "e.g. 192.168.1.10", "fr": "ex. 192.168.1.10" },
+      "required": false
+    },
+    {
+      "key": "external_section",
+      "type": "section",
+      "label": { "en": "Your own go2rtc server", "fr": "Votre propre serveur go2rtc" },
+      "description": {
+        "en": "The address of its API, port 1984 by default (e.g. http://192.168.1.10:1984). With Frigate, publish port 1984 of the Frigate container (\"1984:1984\") and use http://<Frigate host>:1984. If go2rtc asks for a password (api: username / password), fill both fields. Gladys only reads the streams and their snapshots: it never changes your go2rtc.",
+        "fr": "L'adresse de son API, port 1984 par défaut (ex. http://192.168.1.10:1984). Avec Frigate, publiez le port 1984 du conteneur Frigate (\"1984:1984\") et utilisez http://<hôte de Frigate>:1984. Si go2rtc demande un mot de passe (api: username / password), remplissez les deux champs. Gladys lit seulement les flux et leurs images : il ne modifie jamais votre go2rtc."
+      }
+    },
+    {
+      "key": "url",
+      "type": "string",
+      "label": { "en": "go2rtc address", "fr": "Adresse de go2rtc" },
+      "placeholder": {
+        "en": "e.g. http://192.168.1.10:1984",
+        "fr": "ex. http://192.168.1.10:1984"
+      },
+      "required": false
+    },
+    {
+      "key": "username",
+      "type": "string",
+      "label": { "en": "go2rtc user name", "fr": "Identifiant go2rtc" },
+      "required": false
+    },
+    {
+      "key": "password",
+      "type": "secret",
+      "label": { "en": "go2rtc password", "fr": "Mot de passe go2rtc" },
+      "required": false
+    },
+    {
+      "key": "images_section",
+      "type": "section",
+      "label": { "en": "Images in Gladys", "fr": "Images dans Gladys" },
+      "description": {
+        "en": "Gladys shows the last image of each camera on the dashboard, and asks for a fresh one in the live view. Each image is a snapshot: go2rtc connects to the camera when nobody watches it, so a faster pace loads the cameras and this machine more.",
+        "fr": "Gladys affiche la dernière image de chaque caméra sur le tableau de bord, et en demande une nouvelle en vue en direct. Chaque image est un instantané : go2rtc se connecte à la caméra quand personne ne la regarde, un rythme rapide charge donc davantage les caméras et cette machine."
+      }
+    },
+    {
+      "key": "refresh_interval",
+      "type": "select",
+      "label": { "en": "Image refresh", "fr": "Rafraîchissement de l'image" },
+      "required": true,
+      "default": "60",
+      "options": [
+        {
+          "value": "0",
+          "label": {
+            "en": "None (online status checked every 5 minutes)",
+            "fr": "Aucun (état en ligne vérifié toutes les 5 minutes)"
+          }
+        },
+        { "value": "5", "label": { "en": "Every 5 seconds", "fr": "Toutes les 5 secondes" } },
+        { "value": "10", "label": { "en": "Every 10 seconds", "fr": "Toutes les 10 secondes" } },
+        { "value": "15", "label": { "en": "Every 15 seconds", "fr": "Toutes les 15 secondes" } },
+        { "value": "30", "label": { "en": "Every 30 seconds", "fr": "Toutes les 30 secondes" } },
+        { "value": "60", "label": { "en": "Every minute", "fr": "Toutes les minutes" } },
+        { "value": "120", "label": { "en": "Every 2 minutes", "fr": "Toutes les 2 minutes" } },
+        { "value": "300", "label": { "en": "Every 5 minutes", "fr": "Toutes les 5 minutes" } },
+        { "value": "600", "label": { "en": "Every 10 minutes", "fr": "Toutes les 10 minutes" } }
+      ]
+    }
+  ],
+  "containers": [
+    {
+      "name": "go2rtc",
+      "docker_image": "alexxit/go2rtc:1.9.14",
+      "start": "manual",
+      "command": ["go2rtc", "-config", "/config/go2rtc.yaml", "-config", "/config/gladys.yaml"],
+      "volumes": ["/config"],
+      "ports": [
+        {
+          "container_port": 1984,
+          "protocol": "tcp",
+          "name": "go2rtc_web",
+          "label": { "en": "go2rtc web page", "fr": "Page web go2rtc" },
+          "browsable": true
+        },
+        {
+          "container_port": 8554,
+          "protocol": "tcp",
+          "name": "go2rtc_rtsp",
+          "label": { "en": "RTSP restream", "fr": "Rediffusion RTSP" },
+          "browsable": false
+        },
+        {
+          "container_port": 8555,
+          "protocol": "tcp",
+          "name": "go2rtc_webrtc",
+          "label": { "en": "WebRTC (TCP)", "fr": "WebRTC (TCP)" },
+          "browsable": false
+        }
+      ],
+      "devices": ["video"],
+      "read_only": true,
+      "memory_mb": 512,
+      "cpu": 1
     }
   ],
   "actions": [
     {
-      "key": "test_weather",
-      "label": { "en": "Test the weather provider", "fr": "Tester le fournisseur météo" },
-      "timeout_seconds": 30
+      "key": "test_connection",
+      "label": { "en": "Test the connection to go2rtc", "fr": "Tester la connexion à go2rtc" },
+      "timeout_seconds": 20
     },
     {
-      "key": "identify",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "fields": [
-        {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
-        }
-      ]
+      "key": "check_streams",
+      "label": { "en": "Check every stream", "fr": "Vérifier chaque flux" },
+      "description": {
+        "en": "go2rtc connects each stream once: online with its video codec, or why not.",
+        "fr": "go2rtc se connecte une fois à chaque flux : en ligne avec son codec vidéo, ou pourquoi pas."
+      },
+      "timeout_seconds": 120
     }
   ],
   "scene_triggers": [
     {
-      "key": "motion_detected",
-      "label": { "en": "Motion detected", "fr": "Mouvement détecté" },
+      "key": "stream_offline",
+      "label": { "en": "Camera offline", "fr": "Caméra hors ligne" },
       "description": {
-        "en": "A demo motion sensor saw a person or an animal move.",
-        "fr": "Un détecteur de démonstration a vu bouger une personne ou un animal."
+        "en": "A camera stopped answering go2rtc (two failed reads in a row), its stream left go2rtc, or go2rtc itself stopped answering.",
+        "fr": "Une caméra ne répond plus à go2rtc (deux lectures ratées de suite), son flux a quitté go2rtc, ou go2rtc lui-même ne répond plus."
       },
       "fields": [
         {
-          "key": "device",
+          "key": "camera",
           "type": "select",
           "source": "devices",
-          "label": { "en": "Sensor", "fr": "Détecteur" }
+          "required": false,
+          "label": { "en": "Camera (empty: any)", "fr": "Caméra (vide : toutes)" }
         },
         {
-          "key": "target",
-          "type": "multi_select",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" },
+          "key": "reason",
+          "type": "select",
+          "required": false,
+          "label": { "en": "Reason (empty: any)", "fr": "Raison (vide : toutes)" },
           "options": [
-            { "value": "person", "label": { "en": "Person", "fr": "Personne" } },
-            { "value": "animal", "label": { "en": "Animal", "fr": "Animal" } }
+            {
+              "value": "source",
+              "label": { "en": "The camera does not answer", "fr": "La caméra ne répond pas" }
+            },
+            {
+              "value": "server",
+              "label": { "en": "go2rtc does not answer", "fr": "go2rtc ne répond pas" }
+            },
+            {
+              "value": "removed",
+              "label": { "en": "Stream removed from go2rtc", "fr": "Flux retiré de go2rtc" }
+            }
           ]
         }
       ],
       "variables": [
         {
-          "key": "target",
+          "key": "stream",
           "type": "string",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" }
+          "label": { "en": "Stream name", "fr": "Nom du flux" }
+        },
+        {
+          "key": "reason",
+          "type": "string",
+          "label": {
+            "en": "Reason (source, server, removed)",
+            "fr": "Raison (source, server, removed)"
+          }
         }
       ]
-    }
-  ],
-  "scene_actions": [
+    },
     {
-      "key": "identify_device",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
+      "key": "stream_online",
+      "label": { "en": "Camera back online", "fr": "Caméra de nouveau en ligne" },
       "description": {
-        "en": "Make a device signal itself (the demo light blinks).",
-        "fr": "Fait se signaler un appareil (la lampe de démonstration clignote)."
+        "en": "A camera that was offline sends images to go2rtc again.",
+        "fr": "Une caméra qui était hors ligne envoie de nouveau des images à go2rtc."
       },
-      "timeout_seconds": 15,
       "fields": [
         {
-          "key": "device",
+          "key": "camera",
           "type": "select",
           "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
+          "required": false,
+          "label": { "en": "Camera (empty: any)", "fr": "Caméra (vide : toutes)" }
         }
       ],
-      "outputs": [
-        {
-          "key": "signalled",
-          "type": "boolean",
-          "label": { "en": "Device signalled", "fr": "Appareil signalé" }
-        }
+      "variables": [
+        { "key": "stream", "type": "string", "label": { "en": "Stream name", "fr": "Nom du flux" } }
       ]
-    }
-  ],
-  "widgets": [
-    {
-      "key": "demo_status",
-      "label": { "en": "Demo status", "fr": "État de la démo" },
-      "description": {
-        "en": "Live temperature and plug power, plug connection and observed location.",
-        "fr": "Température et puissance en direct, connexion de la prise, position observée."
-      },
-      "icon": "activity",
-      "action_timeout_seconds": 15
     }
   ]
 }

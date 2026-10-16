@@ -1,33 +1,86 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizeConfig, DEFAULT_CONFIG } from '../src/config.js';
+import { normalizeConfig, parseHost, parseServerUrl, parseStreams } from '../src/config.js';
 
-test('normalizeConfig returns the defaults when called with no argument', () => {
-  assert.deepEqual(normalizeConfig(), DEFAULT_CONFIG);
+test('a go2rtc address: bare host -> http, port 1984', () => {
+  assert.deepEqual(parseServerUrl('192.168.1.10'), { url: 'http://192.168.1.10:1984' });
+  assert.deepEqual(parseServerUrl(' frigate.lan:1985 '), { url: 'http://frigate.lan:1985' });
+  assert.deepEqual(parseServerUrl('http://192.168.1.10:1984/'), {
+    url: 'http://192.168.1.10:1984',
+  });
+  // A scheme typed: the URL as it is (a reverse proxy on 443, go2rtc's base_path).
+  assert.deepEqual(parseServerUrl('https://cams.example.org/rtc/'), {
+    url: 'https://cams.example.org/rtc',
+  });
+  assert.deepEqual(parseServerUrl('http://[fd00::10]:1984'), { url: 'http://[fd00::10]:1984' });
 });
 
-test('normalizeConfig keeps user values over the defaults', () => {
-  const config = normalizeConfig({ latitude: 45.5, longitude: -73.6, unit: 'fahrenheit' });
-  assert.equal(config.latitude, 45.5);
-  assert.equal(config.longitude, -73.6);
-  assert.equal(config.unit, 'fahrenheit');
+test('a go2rtc address: refused when empty, foreign or carrying credentials', () => {
+  assert.deepEqual(parseServerUrl(''), { error: 'empty' });
+  assert.deepEqual(parseServerUrl(undefined), { error: 'empty' });
+  assert.deepEqual(parseServerUrl('rtsp://192.168.1.10:8554'), { error: 'invalid' });
+  assert.deepEqual(parseServerUrl('http://admin:pw@192.168.1.10:1984'), { error: 'credentials' });
+  assert.deepEqual(parseServerUrl('http://192.168.1.10:1984/?x=1'), { error: 'invalid' });
+  assert.deepEqual(parseServerUrl('http://bad host'), { error: 'invalid' });
 });
 
-test('normalizeConfig coerces numeric strings coming from a form', () => {
-  const config = normalizeConfig({ latitude: '48.8', longitude: '2.3', poll_frequency: '600' });
-  assert.equal(config.latitude, 48.8);
-  assert.equal(config.longitude, 2.3);
-  assert.equal(config.poll_frequency, 600);
-  assert.equal(typeof config.poll_frequency, 'number');
+test('the WebRTC address: a host name or an IPv4', () => {
+  assert.deepEqual(parseHost(''), { host: null });
+  assert.deepEqual(parseHost('192.168.1.10'), { host: '192.168.1.10' });
+  assert.deepEqual(parseHost('Gladys.LAN'), { host: 'gladys.lan' });
+  assert.deepEqual(parseHost('192.168.1.10:8555'), { error: 'invalid' });
+  assert.deepEqual(parseHost('http://gladys'), { error: 'invalid' });
 });
 
-test('normalizeConfig falls back to the default for a missing numeric field', () => {
-  const config = normalizeConfig({ unit: 'celsius' });
-  assert.equal(config.poll_frequency, DEFAULT_CONFIG.poll_frequency);
+test('the stream slots: default names, ignored halves, invalid slots', () => {
+  const { streams, invalid } = parseStreams({
+    stream_1_name: ' garden ',
+    stream_1_source: ' rtsp://u:p@192.168.1.20/s1 ',
+    stream_2_name: 'name only',
+    stream_3_source: 'ffmpeg:device?video=0#video=h264',
+    stream_4_name: 'garden',
+    stream_4_source: 'rtsp://192.168.1.21/s1',
+    stream_5_name: 'x'.repeat(65),
+    stream_5_source: 'rtsp://192.168.1.22/s1',
+    stream_6_name: 'Entrée : porte',
+    stream_6_source: 'tapo://pw@192.168.1.23\nexec:sh',
+  });
+  assert.deepEqual(streams, [
+    { slot: 1, name: 'garden', source: 'rtsp://u:p@192.168.1.20/s1' },
+    { slot: 3, name: 'camera_3', source: 'ffmpeg:device?video=0#video=h264' },
+  ]);
+  assert.deepEqual(invalid, [4, 5, 6]);
 });
 
-test('GLADYS_PREFER_LOCAL defaults to true and only an explicit false disables it', () => {
-  assert.equal(normalizeConfig().GLADYS_PREFER_LOCAL, true);
-  assert.equal(normalizeConfig({ GLADYS_PREFER_LOCAL: true }).GLADYS_PREFER_LOCAL, true);
-  assert.equal(normalizeConfig({ GLADYS_PREFER_LOCAL: false }).GLADYS_PREFER_LOCAL, false);
+test('normalizeConfig: defaults and every part', () => {
+  const empty = normalizeConfig();
+  assert.equal(empty.mode, 'bundled');
+  assert.equal(empty.refreshSeconds, 60);
+  assert.equal(empty.external.urlError, 'empty');
+  assert.deepEqual(empty.bundled.streams, []);
+  assert.equal(normalizeConfig(null).mode, 'bundled');
+
+  const config = normalizeConfig({
+    mode: 'external',
+    url: '10.0.0.5',
+    username: ' admin ',
+    password: ' secret ',
+    refresh_interval: '5',
+    web_password: 'web',
+    webrtc_address: 'nope:1',
+  });
+  assert.equal(config.mode, 'external');
+  assert.equal(config.refreshSeconds, 5);
+  assert.deepEqual(config.external, {
+    url: 'http://10.0.0.5:1984',
+    urlError: null,
+    username: 'admin',
+    password: ' secret ',
+  });
+  assert.equal(config.bundled.webPassword, 'web');
+  assert.equal(config.bundled.webrtcAddressError, 'invalid');
+  // An interval the manifest does not offer falls back to the default.
+  assert.equal(normalizeConfig({ refresh_interval: '3' }).refreshSeconds, 60);
+  assert.equal(normalizeConfig({ refresh_interval: '0' }).refreshSeconds, 0);
+  assert.equal(normalizeConfig({ mode: 'weird' }).mode, 'bundled');
 });

@@ -1,0 +1,53 @@
+{
+  "producers": [
+    {
+      "id": 40,
+      "format_name": "rtsp",
+      "protocol": "rtsp+tcp",
+      "remote_addr": "127.0.0.1:55580",
+      "source": "exec:ffmpeg -hide_banner -v error -re -f lavfi -i testsrc2=size=1280x720:rate=10 -c:v libx264 -preset ultrafast -tune zerolatency -g 20 -pix_fmt yuv420p -f rtsp rtsp://127.0.0.1:8554/acb218863884aa0480c1f6c2dad2b9e2",
+      "sdp": "v=0\r\no=- 0 0 IN IP4 127.0.0.1\r\ns=No Name\r\nc=IN IP4 127.0.0.1\r\nt=0 0\r\na=tool:libavformat 62.3.100\r\nm=video 0 RTP/AVP 96\r\na=framerate:10\r\na=rtpmap:96 H264/90000\r\na=fmtp:96 packetization-mode=1; sprop-parameter-sets=Z0LAH9oBQBbsBEAAAAMAQAAABSPGDKg=,aM4PyA==; profile-level-id=42C01F\r\na=control:streamid=0\r\n",
+      "user_agent": "Lavf62.3.100",
+      "medias": ["video, recvonly, H264"],
+      "receivers": [
+        {
+          "id": 41,
+          "codec": {
+            "codec_name": "h264",
+            "codec_type": "video",
+            "level": 31,
+            "profile": "Baseline"
+          },
+          "childs": [42],
+          "bytes": 3515,
+          "packets": 3
+        }
+      ]
+    }
+  ],
+  "consumers": [
+    {
+      "id": 39,
+      "format_name": "probe",
+      "protocol": "http",
+      "remote_addr": "172.20.0.3:40196",
+      "user_agent": "node",
+      "medias": ["video, sendonly, ANY"],
+      "senders": [
+        {
+          "id": 42,
+          "codec": {
+            "codec_name": "h264",
+            "codec_type": "video",
+            "level": 31,
+            "profile": "Baseline"
+          },
+          "parent": 41,
+          "bytes": 33703,
+          "packets": 26
+        }
+      ],
+      "bytes_send": 33703
+    }
+  ]
+}

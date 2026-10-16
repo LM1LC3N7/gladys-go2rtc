@@ -1,6 +1,6 @@
 {
   "name": "gladys-go2rtc",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Gladys Assistant external integration for go2rtc: the streams of a go2rtc server (yours, or one Gladys runs) as Gladys cameras. Unofficial, not affiliated with the go2rtc project.",
   "type": "module",

@@ -10,6 +10,8 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-16
+
 ### Added
 
 - One Gladys camera per stream of a go2rtc server (RTSP, ONVIF, HomeKit,
@@ -30,4 +32,5 @@ the notes of the version's GitHub Release.
   online".
 - "Test the connection to go2rtc" and "Check every stream" buttons.
 
-[Unreleased]: https://github.com/LM1LC3N7/gladys-go2rtc/commits/main
+[Unreleased]: https://github.com/LM1LC3N7/gladys-go2rtc/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/LM1LC3N7/gladys-go2rtc/releases/tag/v0.1.1

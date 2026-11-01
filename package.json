@@ -22,7 +22,7 @@
     "url": "git+https://github.com/LM1LC3N7/gladys-go2rtc.git"
   },
   "dependencies": {
-    "@gladysassistant/integration-sdk": "^0.15.0",
+    "@gladysassistant/integration-sdk": "^0.16.0",
     "jpeg-js": "^0.4.4"
   },
   "devDependencies": {
